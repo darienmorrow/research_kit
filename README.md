@@ -1,2 +1,10 @@
 # research_kit
-A python package to help me do my research.
+
+Tools for doing research.
+
+# Install
+
+requires Python 3
+
+- clone or download this repository
+- `python setup.py install` (or `develop`)
