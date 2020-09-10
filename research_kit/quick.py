@@ -25,4 +25,3 @@ def directory_hl3_read_plot_save(directory, overwrite=True, verbose=False, fitti
                  single_hl3_read_plot_save(p, overwrite=overwrite, verbose=verbose, fitting=fitting)
         
 
-single_hl3_read_plot_save('IRF.hl3')

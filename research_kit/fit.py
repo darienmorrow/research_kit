@@ -1,4 +1,5 @@
 import numpy as np
+import WrightTools as wt
 
 def gauss(t, t0, fwhm):
     sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
