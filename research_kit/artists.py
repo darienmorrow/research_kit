@@ -111,3 +111,14 @@ def PL_fig_plot(col, fitting=True):
     PL_g2_plot(axs[2], col.g2hist)
     axs[0].set_title(col.attrs["identifier"])
     return fig, gs
+
+
+def spectra_fig_plot(d):
+    fig, gs = wt.artists.create_figure(default_aspect=0.5)
+    ax = plt.subplot(gs[0])
+    ax.plot(d, linewidth=2)
+    wt.artists.set_ax_labels(xlabel=d.axes[0].label, ylabel="counts")
+    ax.set_title(d.natural_name)
+    ax.set_xlim(d.axes[0].min(), d.axes[0].max())
+    ax.grid()
+    return fig, gs

@@ -6,6 +6,50 @@ import warnings
 import WrightTools as wt
 
 
+def from_princeton_spectrograph_ASCII(
+    filepath, name=None, parent=None, keep_2D=False,
+):
+    filestr = os.fspath(filepath)
+    filepath = pathlib.Path(filepath)
+    if not ".txt" in filepath.suffixes:
+        warnings.warn("wrong filetype. expected .txt file type")
+    ds = np.DataSource(None)
+    f = ds.open(filestr, "rb")
+    # array
+    z = np.genfromtxt(f, dtype=int, skip_header=3, unpack=True)
+    cols = tuple(np.arange(3, z.shape[0] + 1, 1, dtype=int))
+    f.seek(0)
+    wl = np.genfromtxt(f, usecols=cols, skip_header=1, skip_footer=z.shape[1] + 1)
+    frame = z[0, :]
+    strip = z[1, :]
+    z = z[2:, :]
+    if not np.all(frame == 1):
+        raise Exception(
+            "there is more than one frame in this file, this is not currently supported"
+        )
+    # parse name
+    if name is None:
+        name = filepath.stem
+    # create data
+    kwargs = {"name": name, "kind": "Princeton", "source": filestr}
+    if parent is None:
+        data = wt.Data(**kwargs)
+    else:
+        data = parent.create_data(**kwargs)
+    if keep_2D:
+        data.create_variable("wavelength", units="nm", values=wl[:, None])
+        data.create_variable("strip", values=strip[None, :])
+        data.create_channel("counts", values=z)
+        data.transform("wavelength", "strip")
+    else:
+        z = np.sum(z, axis=1)
+        data.create_variable("wavelength", units="nm", values=wl)
+        data.create_channel("counts", values=z)
+        data.transform("wavelength")
+    f.close()
+    return data
+
+
 def from_hl3(
     filepath,
     name=None,
@@ -18,7 +62,7 @@ def from_hl3(
     filestr = os.fspath(filepath)
     filepath = pathlib.Path(filepath)
     if not ".hl3" in filepath.suffixes:
-        warning.warn("wrong filetype. expected .hl3 file type")
+        warnings.warn("wrong filetype. expected .hl3 file type")
     bytesize = os.path.getsize(filepath)
     ds = np.DataSource(None)
     f = ds.open(filestr, "rb")

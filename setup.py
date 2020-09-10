@@ -44,7 +44,7 @@ setup(
     license="MIT",
     url="https://github.com/darienmorrow/research_kit",
     keywords="photophysics spectroscopy science",
-    entry_points = {"console_scripts": ["dir_PL_work=research_kit.__main__:main"]},
+    entry_points={"console_scripts": ["dir_PL_work=research_kit.__main__:main"]},
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Science/Research",
