@@ -2,6 +2,7 @@ import numpy as np
 import os
 import struct
 import pathlib
+import warnings
 import WrightTools as wt
 
 
@@ -17,7 +18,7 @@ def from_hl3(
     filestr = os.fspath(filepath)
     filepath = pathlib.Path(filepath)
     if not ".hl3" in filepath.suffixes:
-        raise Warning("wrong filetype. expected .hl3 file type")
+        warning.warn("wrong filetype. expected .hl3 file type")
     bytesize = os.path.getsize(filepath)
     ds = np.DataSource(None)
     f = ds.open(filestr, "rb")

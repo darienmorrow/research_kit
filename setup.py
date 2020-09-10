@@ -46,7 +46,7 @@ setup(
     keywords="photophysics spectroscopy science",
     entry_points = {"console_scripts": ["dir_PL_work=research_kit.__main__:main"]},
     classifiers=[
-        "Development Status :: 0 - Planning",
+        "Development Status :: 1 - Planning",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering",
         "Natural Language :: English",
