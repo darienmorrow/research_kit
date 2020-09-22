@@ -7,6 +7,37 @@ from . import artists as art
 from . import data_import as di
 
 
+def single_homebuilt_APDscan_read_plot_save(
+    partialfilepath, overwrite=True, verbose=False, sideplot=False
+):
+    d = di.from_homebuilt_APDscan_ASCII_triplet(partialfilepath)
+    fig, gs = art.confocal_scan_plot(d, sideplot=sideplot)
+    p = partialfilepath + ".wt5"
+    d.save(p, overwrite=overwrite, verbose=verbose)
+    p = partialfilepath + ".png"
+    if (os.path.exists(p) == False) or overwrite:
+        wt.artists.savefig(p, fig=fig)
+
+
+def directory_homebuilt_APDscan_ASCII_read_plot_save(
+    directory, overwrite=True, verbose=False
+):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith("_A_set.txt"):
+                p = os.path.join(root, file)
+                # Do a crude test to make sure the txt file isn't a regular file.
+                go = False
+                with open(p) as lines:
+                    for line in islice(lines, 4, 5):
+                        if line == "1APD":
+                            go = True
+                if go:
+                    single_homebuilt_APDscan_read_plot_save(
+                        p, overwrite=overwrite, verbose=verbose
+                    )
+
+
 def single_hl3_read_plot_save(filepath, overwrite=True, verbose=False, fitting=True):
     col = di.from_hl3(filepath)
     fig, gs = art.PL_fig_plot(col, fitting=fitting)

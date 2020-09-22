@@ -6,6 +6,45 @@ import warnings
 import WrightTools as wt
 
 
+def _strip_end(text, suffix):
+    if not text.endswith(suffix):
+        return text
+    return text[: len(text) - len(suffix)]
+
+
+def from_homebuilt_APDscan_ASCII_triplet(partialfilepath, name=None, parent=None):
+    ends = ["_A_set.txt", "_B_Mtr.txt", "_C_Mrt.txt"]
+    for end in ends:
+        partialfilepath = _strip_end(partialfilepath, end)
+    filestrs = [os.fspath(partialfilepath + end) for end in ends]
+    fs = [np.DataSource(None).open(filestr, "rb") for filestr in filestrs]
+    # first harvest some metadata from A_set file
+    arr = np.loadtxt(fs[0], max_rows=1, dtype=int)
+    x0, y0, extent, pixels = arr[0], arr[1], arr[2], arr[3]
+    x = np.linspace(x0, extent + x0, pixels)
+    y = np.linspace(y0, extent + y0, pixels)
+    # grab trace and retrace data
+    trace = np.genfromtxt(fs[1], unpack=True)
+    retrace = np.genfromtxt(fs[2], unpack=True)
+    # parse name
+    if name is None:
+        name = pathlib.Path(partialfilepath).stem
+    # create data
+    kwargs = {"name": name, "kind": "APDscan", "source": filestrs[1]}
+    if parent is None:
+        data = wt.Data(**kwargs)
+    else:
+        data = parent.create_data(**kwargs)
+    data.create_variable("x", values=x[:, None], units="um")
+    data.create_variable("y", values=y[None, :], units="um")
+    data.create_channel("trace", values=trace)
+    data.create_channel("retrace", values=retrace)
+    data.transform("x", "y")
+    for f in fs:
+        f.close()
+    return data
+
+
 def from_princeton_spectrograph_ASCII(
     filepath, name=None, parent=None, keep_2D=False,
 ):

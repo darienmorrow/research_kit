@@ -122,3 +122,33 @@ def spectra_fig_plot(d):
     ax.set_xlim(d.axes[0].min(), d.axes[0].max())
     ax.grid()
     return fig, gs
+
+
+def confocal_scan_plot(d, sideplot=False):
+    # d = d.copy()
+    # d.create_channel(name='trace_log', values=np.sqrt(d['trace'][:]))
+    # d.create_channel(name='retrace_log', values=np.sqrt(d['retrace'][:]))
+    vmin = min(d["trace"].min(), d["retrace"].min())
+    vmax = max(d["trace"].max(), d["retrace"].max())
+    fig, gs = wt.artists.create_figure(width="double", cols=[1, 1, "cbar"])
+    axs = [plt.subplot(gs[i]) for i in range(2)]
+    axs[0].pcolor(d, channel="trace", vmin=vmin, vmax=vmax)
+    axs[0].set_title("trace")
+    axs[1].pcolor(d, channel="retrace", vmin=vmin, vmax=vmax)
+    axs[1].set_title("retrace")
+    wt.artists.set_fig_labels(
+        xlabel="$\\mathsf{x \\; (\\mu m)}$",
+        ylabel="$\\mathsf{y \\; (\\mu m)}$",
+        title=d.natural_name,
+    )
+    cax = plt.subplot(gs[-1])
+    ticks = np.linspace(vmin, vmax, 2)
+    wt.artists.plot_colorbar(cax, ticks=ticks)
+    if sideplot:
+        first = [d.x.points, d.y.points, d.trace.points.T]
+        second = [d.x.points, d.y.points, d.retrace.points.T]
+        for ax, arrs_to_bin in zip(axs, [first, second]):
+            wt.artists.add_sideplot(ax, along="x", arrs_to_bin=arrs_to_bin)
+            wt.artists.add_sideplot(ax, along="y", arrs_to_bin=arrs_to_bin)
+
+    return fig, gs
