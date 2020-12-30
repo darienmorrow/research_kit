@@ -188,7 +188,7 @@ def from_hl3(
         g2bins = acq_params["Records"] // 4000
     g2y, bin_edges = np.histogram(g2, bins=g2bins, range=(-3.5, 3.5))
     g2x = np.diff(bin_edges) / 2 + bin_edges[:-1]
-    if bin_which == "both":
+    if bin_which == "combined":
         macroy, bin_edges = np.histogram(macrotime, bins=macrobins)
         macrox = np.diff(bin_edges) / 2 + bin_edges[:-1]
         picoy, bin_edges = np.histogram(picotime, bins=picobins)
@@ -201,23 +201,43 @@ def from_hl3(
         macroy, bin_edges = np.histogram(macrotime1, bins=macrobins)
         macrox = np.diff(bin_edges) / 2 + bin_edges[:-1]
         picoy, picox = hist1, histx
+    elif bin_which == "both":
+        macroy0, bin_edges = np.histogram(macrotime0, bins=macrobins)
+        macroy1, bin_edges = np.histogram(macrotime1, bins=macrobins)
+        macrox = np.diff(bin_edges) / 2 + bin_edges[:-1] 
+        picoy0, picoy1, picox = hist0, hist1, histx              
     # now package it all into a Collection
     col = wt.Collection(name=name, parent=parent)
     col.attrs["identifier"] = filepath.stem + "_AcqTime-" + acq_params["TimeStamp"]
     col.attrs.update(acq_params)
-
-    d = wt.Data(parent=col, name="macrohist", source=filestr)
-    d.create_channel(name="counts", values=macroy)
-    d.create_variable(name="labtime", units="s_t", values=macrox)
-    d.transform("labtime")
-    d = wt.Data(parent=col, name="picohist", source=filestr)
-    d.create_channel(name="counts", values=picoy)
-    d.create_variable(name="delay", units="ns", values=picox * 1e9)
-    d.transform("delay")
-    d = wt.Data(parent=col, name="g2hist", source=filestr)
-    d.create_channel(name="counts", values=g2y)
-    d.create_variable(name="delay", values=g2x)
-    d.transform("delay")
+    if bin_which == 'both':
+        d = wt.Data(parent=col, name="macrohist", source=filestr)
+        d.create_channel(name="counts0", values=macroy0)
+        d.create_channel(name="counts1", values=macroy1)
+        d.create_variable(name="labtime", units="s_t", values=macrox)
+        d.transform("labtime")
+        d = wt.Data(parent=col, name="picohist", source=filestr)
+        d.create_channel(name="counts0", values=picoy0)
+        d.create_channel(name="counts1", values=picoy1)
+        d.create_variable(name="delay", units="ns", values=picox * 1e9)
+        d.transform("delay")
+        d = wt.Data(parent=col, name="g2hist", source=filestr)
+        d.create_channel(name="counts", values=g2y)
+        d.create_variable(name="delay", values=g2x)
+        d.transform("delay")
+    else:
+        d = wt.Data(parent=col, name="macrohist", source=filestr)
+        d.create_channel(name="counts", values=macroy)
+        d.create_variable(name="labtime", units="s_t", values=macrox)
+        d.transform("labtime")
+        d = wt.Data(parent=col, name="picohist", source=filestr)
+        d.create_channel(name="counts", values=picoy)
+        d.create_variable(name="delay", units="ns", values=picox * 1e9)
+        d.transform("delay")
+        d = wt.Data(parent=col, name="g2hist", source=filestr)
+        d.create_channel(name="counts", values=g2y)
+        d.create_variable(name="delay", values=g2x)
+        d.transform("delay")
     d.attrs["arearatio"] = arearatio
     if keep_all:
         c = wt.Collection(name="full_arrays", parent=col)
