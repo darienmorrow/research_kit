@@ -45,8 +45,11 @@ def from_homebuilt_APDscan_ASCII_triplet(partialfilepath, name=None, parent=None
     return data
 
 
+
+
+
 def from_princeton_spectrograph_ASCII(
-    filepath, name=None, parent=None, keep_2D=False,
+    filepath, name=None, parent=None, keep_2D=False
 ):
     filestr = os.fspath(filepath)
     filepath = pathlib.Path(filepath)
@@ -54,18 +57,46 @@ def from_princeton_spectrograph_ASCII(
         warnings.warn("wrong filetype. expected .txt file type")
     ds = np.DataSource(None)
     f = ds.open(filestr, "rb")
-    # array
-    z = np.genfromtxt(f, dtype=int, skip_header=3, unpack=True)
-    cols = tuple(np.arange(3, z.shape[0] + 1, 1, dtype=int))
+    # array creation
+    # first we figure out what type of data format we are dealing with
+    arr =  np.genfromtxt(f, max_rows=1, unpack=True)
     f.seek(0)
-    wl = np.genfromtxt(f, usecols=cols, skip_header=1, skip_footer=z.shape[1] + 1)
-    frame = z[0, :]
-    strip = z[1, :]
-    z = z[2:, :]
-    if not np.all(frame == 1):
-        raise Exception(
-            "there is more than one frame in this file, this is not currently supported"
-        )
+    numnan = np.isnan(arr).sum()
+    if numnan == 3:
+        z = np.genfromtxt(f, dtype=int, skip_header=3, unpack=True)
+        cols = tuple(np.arange(3, z.shape[0] + 1, 1, dtype=int))
+        f.seek(0)
+        wl = np.genfromtxt(f, usecols=cols, skip_header=1, skip_footer=z.shape[1] + 1)
+        frame = z[0, :]
+        strip = z[1, :]
+        z = z[2:, :]
+    elif numnan == 1:
+        z = np.genfromtxt(f, dtype=int, skip_header=3, unpack=True)
+        cols = tuple(np.arange(1, z.shape[0] + 1, 1, dtype=int))
+        f.seek(0)
+        wl = np.genfromtxt(f, skip_header=1, max_rows=1)
+        strip = z[0,:]
+        wl = wl[1:]
+        z = z[1:,:]
+    elif arr.size == 3:
+        arrs = []
+        dtypes = [float, int, int]
+        for i, col in enumerate(range(3)):
+            f.seek(0)
+            arrs.append(np.genfromtxt(f, unpack=True, usecols=(col), dtype=dtypes[i]))    
+        length1 = arrs[1].max()
+        length0 = arrs[1].shape[0]//length1
+        newshape = (length1, length0)
+        for i in range(len(arrs)):
+            arrs[i] = np.reshape(arrs[i], newshape)
+        wl = arrs[0][0,:]
+        z = arrs[2].T
+        strip = np.linspace(1, z.shape[-1], z.shape[-1], dtype=int)
+    else:
+        raise Exception('data format not currently supported')
+    
+
+        
     # parse name
     if name is None:
         name = filepath.stem
