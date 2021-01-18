@@ -207,6 +207,8 @@ def from_hl3(
         macrox = np.diff(bin_edges) / 2 + bin_edges[:-1] 
         picoy0, picoy1, picox = hist0, hist1, histx              
     # now package it all into a Collection
+    if name is None:
+        name = filepath.stem
     col = wt.Collection(name=name, parent=parent)
     col.attrs["identifier"] = filepath.stem + "_AcqTime-" + acq_params["TimeStamp"]
     col.attrs.update(acq_params)
