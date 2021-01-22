@@ -2,6 +2,7 @@ import os
 import WrightTools as wt
 import matplotlib.pyplot as plt
 from itertools import islice
+import numpy as np
 
 from . import artists as art
 from . import data_import as di
@@ -49,6 +50,22 @@ def single_hl3_read_plot_save(filepath, overwrite=True, verbose=False, fitting=T
     if (os.path.exists(p) == False) or overwrite:
         wt.artists.savefig(p, fig=fig)
 
+def directory_hl3_ASCII_save(directory, overwrite=True, verbose=False):
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".hl3"):
+                p = os.path.join(root, file)
+                col = di.from_hl3(p, bin_which = "both")
+                d = col.picohist
+                pre_name = os.path.splitext(p)[0]
+                outp = pre_name + '_hl3_export.txt'
+                x = d.delay.points
+                y0 = d.counts0.points
+                y1 = d.counts1.points
+                arr = np.stack((x, y0, y1), axis=-1)
+                if (os.path.exists(outp) == False) or overwrite:
+                    np.savetxt(outp, arr, delimiter=",")
+                
 
 def directory_hl3_read_plot_save(
     directory, overwrite=True, verbose=False, fitting=True
