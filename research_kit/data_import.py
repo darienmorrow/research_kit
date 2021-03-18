@@ -129,6 +129,7 @@ def from_hl3(
     bin_which="zero",
     picobins=None,
     g2bins=None,
+    area_ratio_calc = True,
 ):
     filestr = os.fspath(filepath)
     filepath = pathlib.Path(filepath)
@@ -218,7 +219,11 @@ def from_hl3(
     if np.any(_a == 0):
         arearatio = 0
     else:
-        arearatio = a0 / ((a_1 + a1) / 6)
+        if area_ratio_calc:
+            a_1 = ((-3.5 < g2) & (g2 < -0.5)).sum()
+            a1 = ((0.5 < g2) & (g2 < 3.5)).sum()
+            a0 = ((-0.5 < g2) & (g2 < 0.5)).sum()
+            arearatio = a0 / ((a_1 + a1) / 6)
     # calculate histograms
     macrobins = int(macrotime.max())
     if g2bins is None:
@@ -277,7 +282,8 @@ def from_hl3(
         d.create_channel(name="counts", values=g2y)
         d.create_variable(name="delay", values=g2x)
         d.transform("delay")
-    d.attrs["arearatio"] = arearatio
+    if area_ratio_calc:
+        d.attrs["arearatio"] = arearatio
     if keep_all:
         c = wt.Collection(name="full_arrays", parent=col)
         # macrotime
