@@ -6,6 +6,35 @@ import numpy as np
 
 from . import artists as art
 from . import data_import as di
+from . import format_conversions as fc
+
+
+def director_hl3_full(directory, verbose, hdf5, plot, fit):
+    count = 0
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".hl3"):
+                p = os.path.join(root, file)
+                pre_name = os.path.splitext(p)[0]
+                try:
+                    col = di.from_hl3(p, bin_which="both")
+                    fc.col_TRPL_to_ASCII(col, pre_name)
+                    if plot:
+                        fig, gs = art.PL_fig_plot(col, fitting=fit)
+                        psave = str(pre_name) + ".png"
+                        plt.savefig(psave, dpi=300, bbox_inches="tight")
+                        plt.close()
+                    if hdf5:
+                        col.save(pre_name + ".wt5", verbose=verbose, overwrite=True)
+                except Exception as error:
+                    print("Error working up {}".format(str(p)))
+                    print(repr(error))
+    if verbose:
+        print(
+            "Finished parsing .hl3 files in {0}. Parsed {1} files.".format(
+                str(directory), str(count)
+            )
+        )
 
 
 def single_homebuilt_APDscan_read_plot_save(
@@ -50,22 +79,23 @@ def single_hl3_read_plot_save(filepath, overwrite=True, verbose=False, fitting=T
     if (os.path.exists(p) == False) or overwrite:
         wt.artists.savefig(p, fig=fig)
 
+
 def directory_hl3_ASCII_save(directory, overwrite=True, verbose=False):
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(".hl3"):
                 p = os.path.join(root, file)
-                col = di.from_hl3(p, bin_which = "both")
+                col = di.from_hl3(p, bin_which="both")
                 d = col.picohist
                 pre_name = os.path.splitext(p)[0]
-                outp = pre_name + '_hl3_export.txt'
+                outp = pre_name + "_hl3_export.txt"
                 x = d.delay.points
                 y0 = d.counts0.points
                 y1 = d.counts1.points
                 arr = np.stack((x, y0, y1), axis=-1)
                 if (os.path.exists(outp) == False) or overwrite:
                     np.savetxt(outp, arr, delimiter=",")
-                
+
 
 def directory_hl3_read_plot_save(
     directory, overwrite=True, verbose=False, fitting=True

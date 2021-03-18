@@ -12,6 +12,14 @@ def _strip_end(text, suffix):
     return text[: len(text) - len(suffix)]
 
 
+def from_Cary(p):
+    pass
+
+
+def from_Horiba_2D(ps):
+    pass
+
+
 def from_homebuilt_APDscan_ASCII_triplet(partialfilepath, name=None, parent=None):
     ends = ["_A_set.txt", "_B_Mtr.txt", "_C_Mrt.txt"]
     for end in ends:
@@ -45,12 +53,7 @@ def from_homebuilt_APDscan_ASCII_triplet(partialfilepath, name=None, parent=None
     return data
 
 
-
-
-
-def from_princeton_spectrograph_ASCII(
-    filepath, name=None, parent=None, keep_2D=False
-):
+def from_princeton_spectrograph_ASCII(filepath, name=None, parent=None, keep_2D=False):
     filestr = os.fspath(filepath)
     filepath = pathlib.Path(filepath)
     if not ".txt" in filepath.suffixes:
@@ -59,7 +62,7 @@ def from_princeton_spectrograph_ASCII(
     f = ds.open(filestr, "rb")
     # array creation
     # first we figure out what type of data format we are dealing with
-    arr =  np.genfromtxt(f, max_rows=1, unpack=True)
+    arr = np.genfromtxt(f, max_rows=1, unpack=True)
     f.seek(0)
     numnan = np.isnan(arr).sum()
     if numnan == 3:
@@ -75,28 +78,26 @@ def from_princeton_spectrograph_ASCII(
         cols = tuple(np.arange(1, z.shape[0] + 1, 1, dtype=int))
         f.seek(0)
         wl = np.genfromtxt(f, skip_header=1, max_rows=1)
-        strip = z[0,:]
+        strip = z[0, :]
         wl = wl[1:]
-        z = z[1:,:]
+        z = z[1:, :]
     elif arr.size == 3:
         arrs = []
         dtypes = [float, int, int]
         for i, col in enumerate(range(3)):
             f.seek(0)
-            arrs.append(np.genfromtxt(f, unpack=True, usecols=(col), dtype=dtypes[i]))    
+            arrs.append(np.genfromtxt(f, unpack=True, usecols=(col), dtype=dtypes[i]))
         length1 = arrs[1].max()
-        length0 = arrs[1].shape[0]//length1
+        length0 = arrs[1].shape[0] // length1
         newshape = (length1, length0)
         for i in range(len(arrs)):
             arrs[i] = np.reshape(arrs[i], newshape)
-        wl = arrs[0][0,:]
+        wl = arrs[0][0, :]
         z = arrs[2].T
         strip = np.linspace(1, z.shape[-1], z.shape[-1], dtype=int)
     else:
-        raise Exception('data format not currently supported')
-    
+        raise Exception("data format not currently supported")
 
-        
     # parse name
     if name is None:
         name = filepath.stem
@@ -212,7 +213,11 @@ def from_hl3(
     a_1 = ((-3.5 < g2) & (g2 < -0.5)).sum()
     a1 = ((0.5 < g2) & (g2 < 3.5)).sum()
     a0 = ((-0.5 < g2) & (g2 < 0.5)).sum()
-    arearatio = a0 / ((a_1 + a1) / 6)
+    _a = np.array([a_1, a1, a0])
+    if np.any(_a == 0):
+        arearatio = 0
+    else:
+        arearatio = a0 / ((a_1 + a1) / 6)
     # calculate histograms
     macrobins = int(macrotime.max())
     if g2bins is None:
@@ -235,15 +240,15 @@ def from_hl3(
     elif bin_which == "both":
         macroy0, bin_edges = np.histogram(macrotime0, bins=macrobins)
         macroy1, bin_edges = np.histogram(macrotime1, bins=macrobins)
-        macrox = np.diff(bin_edges) / 2 + bin_edges[:-1] 
-        picoy0, picoy1, picox = hist0, hist1, histx              
+        macrox = np.diff(bin_edges) / 2 + bin_edges[:-1]
+        picoy0, picoy1, picox = hist0, hist1, histx
     # now package it all into a Collection
     if name is None:
         name = filepath.stem
     col = wt.Collection(name=name, parent=parent)
     col.attrs["identifier"] = filepath.stem + "_AcqTime-" + acq_params["TimeStamp"]
     col.attrs.update(acq_params)
-    if bin_which == 'both':
+    if bin_which == "both":
         d = wt.Data(parent=col, name="macrohist", source=filestr)
         d.create_channel(name="counts0", values=macroy0)
         d.create_channel(name="counts1", values=macroy1)
