@@ -47,7 +47,7 @@ def PL_picotime_plot(ax, d, fitting=1):
                 ts.append(t1)
                 ts.append(t2)
             if fitting == 3:
-                pfit, perr, ymodel = fit.biexp_fit(x, y)
+                pfit, perr, ymodel = fit.triexp_fit(x, y)
                 t1, A1, t2, A2, t3, A3, B, t0, fwhm = pfit
                 ts.append(t1)
                 ts.append(t2)
@@ -57,10 +57,11 @@ def PL_picotime_plot(ax, d, fitting=1):
                 label = label + "\\;" + str(round(np.abs(t), 1)) + ","
             label = label[:-1] + "\\;ns}$"
             ax.plot(x, ymodel, color=color, linewidth=4, alpha=0.75, label=label)
+            ax.legend()
     ax.set_xlim(x.min(), x.max())
     ax.set_ylim(mins + 1, maxes * 1.1)
     ax.set_yscale("log")
-    ax.legend()
+    
 
 
 def PL_macrotime_plot(ax, d, col):

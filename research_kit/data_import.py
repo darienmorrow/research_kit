@@ -177,7 +177,7 @@ def from_hl3(
     picotime = picotime * resolution * 1e-12
     out1 = np.bitwise_and(arr[overflow_index], 1023)
     out2 = 1024 * (overflow_index - np.arange(0, overflow_index.size, 1))
-    macrotime = (out1 + out2) * syncperiod * 1e-9 + picotime
+    macrotime = (out1 + out2) / acq_params["SyncRate"] + picotime
     # separate out the channels
     channels = channeli[overflow_index]
     # marker = np.nonzero((channels >= 2) & (channels <= 15))[0]
@@ -193,16 +193,17 @@ def from_hl3(
     hist1, bin_edges = np.histogram(picotime1, bins=picobins, range=(x[0], x[-1]))
     histx = np.diff(bin_edges) / 2 + bin_edges[:-1]
     # offset all channel1 macrotime and picotimes
-    offset = (
-        histx[np.argmax(np.correlate(hist0, hist1, mode="same"))]
-        - (picotime.max() - picotime.min()) / 2
-    )
-    macrotime[channels == 1] += offset
-    picotime[channels == 1] += offset
-    macrotime1 += offset
-    picotime1 += offset
-    # recalculate histogram
-    hist1, bin_edges = np.histogram(picotime1, bins=picobins, range=(x[0], x[-1]))
+    if ((hist0.max() > 1) & (hist1.max() > 1)):
+        offset = (
+            histx[np.argmax(np.correlate(hist0, hist1, mode="same"))]
+            - (picotime.max() - picotime.min()) / 2
+        )
+        macrotime[channels == 1] += offset
+        picotime[channels == 1] += offset
+        macrotime1 += offset
+        picotime1 += offset
+        # recalculate histogram
+        hist1, bin_edges = np.histogram(picotime1, bins=picobins, range=(x[0], x[-1]))
     # do psuedo g2 calculation
     diffchan = np.diff(channels.astype(np.int32))
     diffmacro = np.diff(macrotime)

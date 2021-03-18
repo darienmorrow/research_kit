@@ -19,6 +19,7 @@ def director_hl3_full(directory, verbose, hdf5, plot, fit):
                 try:
                     col = di.from_hl3(p, bin_which="both")
                     fc.col_TRPL_to_ASCII(col, pre_name)
+                    count += 1
                     if plot:
                         fig, gs = art.PL_fig_plot(col, fitting=fit)
                         psave = str(pre_name) + ".png"
