@@ -33,7 +33,7 @@ def PL_picotime_plot(ax, d, fitting=1):
             maxes = y.max()
         if y.min() < mins:
             mins = y.min()
-        ax.plot(x, y, linewidth=1, alpha=1, color=color)
+        ax.plot(x, y, linewidth=1, alpha=.5, color=color)
         # ax.fill_between(x, y, alpha=0.3, color=color)
         if fitting in [1, 2, 3]:
             ts = []
@@ -56,7 +56,7 @@ def PL_picotime_plot(ax, d, fitting=1):
             for t in ts:
                 label = label + "\\;" + str(round(np.abs(t), 1)) + ","
             label = label[:-1] + "\\;ns}$"
-            ax.plot(x, ymodel, color=color, linewidth=4, alpha=0.75, label=label)
+            ax.plot(x, ymodel, color=color, linewidth=3, alpha=1, label=label)
             ax.legend()
     ax.set_xlim(x.min(), x.max())
     ax.set_ylim(mins + 1, maxes * 1.1)
