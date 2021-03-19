@@ -53,4 +53,4 @@ def col_TRPL_to_ASCII(col, outp):
         tidy_headers.write(pout, out_dict)
 
         with open(pout, "ab") as f:
-            np.savetxt(f, out_arr, fmt="%i", delimiter="\t")
+            np.savetxt(f, out_arr, delimiter="\t")
