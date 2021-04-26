@@ -65,6 +65,8 @@ def from_princeton_spectrograph_ASCII(filepath, name=None, parent=None, keep_2D=
     arr = np.genfromtxt(f, max_rows=1, unpack=True)
     f.seek(0)
     numnan = np.isnan(arr).sum()
+
+    
     if numnan == 3:
         z = np.genfromtxt(f, dtype=int, skip_header=3, unpack=True)
         cols = tuple(np.arange(3, z.shape[0] + 1, 1, dtype=int))
@@ -94,6 +96,20 @@ def from_princeton_spectrograph_ASCII(filepath, name=None, parent=None, keep_2D=
             arrs[i] = np.reshape(arrs[i], newshape)
         wl = arrs[0][0, :]
         z = arrs[2].T
+        strip = np.linspace(1, z.shape[-1], z.shape[-1], dtype=int)
+    elif (arr.size == 4) and (numnan == 0): 
+        arrs = []
+        dtypes = [float, int, int, int]
+        for i, col in enumerate(range(4)):
+            f.seek(0)
+            arrs.append(np.genfromtxt(f, unpack=True, usecols=(col), dtype=dtypes[i]))
+        length1 = arrs[1].max()
+        length0 = arrs[1].shape[0] // length1
+        newshape = (length1, length0)
+        for i in range(len(arrs)):
+            arrs[i] = np.reshape(arrs[i], newshape)
+        wl = arrs[0][0, :]
+        z = arrs[3].T
         strip = np.linspace(1, z.shape[-1], z.shape[-1], dtype=int)
     else:
         raise Exception("data format not currently supported")
