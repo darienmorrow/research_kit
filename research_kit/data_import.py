@@ -19,6 +19,34 @@ def from_Cary(p):
 def from_Horiba_2D(ps):
     pass
 
+def from_RandS_trace(filepath, name=None, parent=None, cast_mag_to_dB=True):
+    def caster(arr):
+        if cast_mag_to_dB:
+            return 20*np.log10(arr)
+        else:
+            return arr
+    filestr = os.fspath(filepath)
+    filepath = pathlib.Path(filepath)
+    if not ".csv" in filepath.suffixes:
+        warnings.warn("wrong filetype. expected .csv file type")
+    # parse name
+    if name is None:
+        name = filepath.stem
+    arr = np.genfromtxt(filepath, delimiter=';', skip_header=3, unpack=True)
+    kwargs = {"name": name, "kind": "NetworkAnalizer", "source": filestr}
+    d = wt.Data(parent=parent, **kwargs)
+    d.create_variable('freq', units='GHz', values=arr[0]/1e9)
+    chan_names = ['S11_re', 'S11_im', 'S12_re', 'S12_im', 'S21_re', 'S21_im', 'S22_re', 'S22_im']
+    for i,c in enumerate(chan_names):
+        d.create_channel(name=c, values=arr[i+1])
+    d.transform('freq')
+    chan_names = ['S11_mag', 'S12_mag', 'S21_mag', 'S22_mag']
+    for i, c in enumerate(chan_names):
+        a1 = arr[2*i+1]
+        a2 = arr[2*i+2]
+        mag = np.sqrt(a1**2 + a2**2)
+        d.create_channel(name=c, values=caster(mag))
+    return d
 
 def from_homebuilt_APDscan_ASCII_triplet(partialfilepath, name=None, parent=None):
     ends = ["_A_set.txt", "_B_Mtr.txt", "_C_Mrt.txt"]
