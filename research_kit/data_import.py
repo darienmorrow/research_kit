@@ -173,6 +173,7 @@ def from_hl3(
     bin_which="zero",
     picobins=None,
     g2bins=None,
+    macrobins=None,
     area_ratio_calc = True,
 ):
     filestr = os.fspath(filepath)
@@ -269,7 +270,8 @@ def from_hl3(
             a0 = ((-0.5 < g2) & (g2 < 0.5)).sum()
             arearatio = a0 / ((a_1 + a1) / 6)
     # calculate histograms
-    macrobins = int(macrotime.max())
+    if macrobins is None:
+        macrobins = int(macrotime.max())
     if g2bins is None:
         g2bins = acq_params["Records"] // 4000
     g2y, bin_edges = np.histogram(g2, bins=g2bins, range=(-3.5, 3.5))

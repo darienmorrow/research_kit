@@ -1,5 +1,49 @@
 import numpy as np
 import WrightTools as wt
+from scipy.optimize import least_squares as ls 
+import time 
+
+
+def simple_fit(objective_func, guess_params, xdata, ydata, verbose=True, bounds=(-np.inf, np.inf)):
+    """
+    Wrapper for SciPy's scipy.optimize.least_squares
+
+    Parameters
+    ----------
+    objective_func : function
+        function to fit to with syntax of f(x, p1, p2, ...,) or f(x, params)
+    guess_params : array_like with shape (n,)
+        Initial guess on independent variables. 
+    xdata : array_like with shape (m,)
+        Independent data.
+    ydata : array_like with shape (m,)
+        Dependent data.
+    verbose : bool, optional
+        Toggle printing of fitting time, cost, and parameters. The default is True.
+    bounds : 2-tuple of array_like, optional
+        Lower and upper bounds on independent variables. 
+        Defaults to no bounds. 
+        Each array must match the size of guess_params or be a scalar, in the latter case a bound will be the same for all variables. 
+        Use np.inf with an appropriate sign to disable bounds on all or some variables.
+        The default is (-np.inf, np.inf).
+
+    Returns
+    -------
+    params : array_like with shape (n,)
+
+    """
+    def cost_func(params):
+        # simple, linear cost function. 
+        # One can make more nuanced cost functions if needed.
+        cost = ydata - objective_func(xdata, params)
+        return cost
+    t0 = time.time()
+    out = ls(cost_func, guess_params, bounds=bounds)
+    t1 = time.time()
+    if verbose:
+        print('Fit done in {0} s with cost of {1}.'.format(str(round(t1-t0,2)), str(out.cost)))
+        print(out.x)
+    return out.x
 
 
 def gauss(t, t0, fwhm):

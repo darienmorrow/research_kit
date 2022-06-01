@@ -2,6 +2,32 @@ import numpy as np
 import tidy_headers
 import collections
 
+def arr_to_ASCII(arr, column_names, pout):
+    """
+    Write array to ASCII file.
+
+    Parameters
+    ----------
+    arr : array_like
+        vstack is useful here arr = np.vstack(outs).T
+    column_names : list
+        names of columns
+    outp : str
+        filepath to write files to
+
+    Returns
+    -------
+    None.
+
+    """
+    # vstack is useful here arr = np.vstack(outs).T
+    out_dict = collections.OrderedDict()
+    out_dict["columns"] = column_names
+    tidy_headers.write(pout, out_dict)
+
+    with open(pout, "ab") as f:
+        np.savetxt(f, arr, delimiter="\t")
+
 
 def col_TRPL_to_ASCII(col, outp):
     """
